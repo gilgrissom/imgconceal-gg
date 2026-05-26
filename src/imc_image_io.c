@@ -263,8 +263,14 @@ int imc_steg_insert(CarrierImage *carrier_img, const char *file_path)
 
     // Create a buffer for the compressed data
     // Note: For the overhead calculation, see https://zlib.net/zlib_tech.html
-    const size_t zlib_overhead = 6 + (5 * (file_size / 16000)) + 1;
-    size_t zlib_buffer_size = raw_size + zlib_overhead;
+    // GG This two lines were commented to fix a bug causing a "memory"
+    // GG error when hidden file was already compressed, encrypted or high entropy
+    // GG const size_t zlib_overhead = 6 + (5 * (file_size / 16000)) + 1;
+    // GG size_t zlib_buffer_size = raw_size + zlib_overhead;
+    // GG This two lines are part of the fix above
+    const uLong uncompressed_size = (uLong)(raw_size - compressed_offset); // GG
+	size_t zlib_buffer_size = compressed_offset + compressBound(uncompressed_size); // GG
+
     uint8_t *const input_buffer = (uint8_t *)(&file_info->access_time);
     uint8_t *zlib_buffer = imc_malloc(zlib_buffer_size);
     
@@ -292,7 +298,8 @@ int imc_steg_insert(CarrierImage *carrier_img, const char *file_path)
         &zlib_buffer_size,                  // Size in bytes of the output buffer (the function updates the value to the used size)
         #endif // _WIN32
         input_buffer,                       // Data being compressed
-        file_info->uncompressed_size,       // Size in bytes of the data
+        // GG file_info->uncompressed_size,       // Size in bytes of the data
+    	uncompressed_size, // GG Size in bytes of the data see fix above marked GG
         9                                   // Compression level
     );
 

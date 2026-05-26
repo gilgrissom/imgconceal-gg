@@ -38,6 +38,7 @@ static const struct argp_option argp_options[] = {
         "This option can be used with '--hide', '--extract', or '--check'." , 4},
     {"verbose", 'v', NULL, 0, "Print detailed progress information.", 5},
     {"silent", 's', NULL, 0, "Do not print any progress information (errors are still shown).", 5},
+	{"overwrite", 'f', NULL, 0, "Overwrite existing output files instead of renaming them.", 3}, // GG Added option to overwrite output file or payload if already present
     {"algorithm", PRINT_ALGORITHM, NULL, 0, "Print a summary of the algorithm used by imgconceal, then exit.", 6},
     {0}
 };
@@ -103,6 +104,7 @@ typedef struct UserOptions {
     bool no_password;   // 'true' if not using a password
     bool verbose;       // Prints detailed information during operation
     bool silent;        // Do not print any information during operation
+	bool overwrite; // GG Added option to overwrite output file or payload if already present
 } UserOptions;
 
 // Get a password from the user on the command-line. The typed characters are not displayed.
@@ -681,7 +683,7 @@ static inline void __execute_options(struct argp_state *state, void *options)
         int unhide_status = IMC_SUCCESS;
         while (unhide_status == IMC_SUCCESS)
         {
-            unhide_status = imc_steg_extract(steg_image);
+            unhide_status = imc_steg_extract(steg_image, opt->overwrite); // GG Added option to overwrite output file or payload if already present
             const char const* image_name = basename(steg_path); // Name of the image with hidden data
             const char const* unhid_name = steg_image->steg_info->file_name; // Name of the unhidden file
 
@@ -819,7 +821,7 @@ static inline void __execute_options(struct argp_state *state, void *options)
     if (mode == HIDE && image_has_changed)
     {
         const char *const save_path = opt->output ? opt->output : opt->input;
-        const int save_status = imc_steg_save(steg_image, save_path);
+        const int save_status = imc_steg_save(steg_image, save_path, opt->overwrite); // GG Added option to overwrite output file or payload if already present
         /* Note: The input image will not be overwritten because our file name
            collision resolution is going to append a number to the output's name. */
         
@@ -924,6 +926,11 @@ static int imc_cli_parse_options(int key, char *arg, struct argp_state *state)
             ((UserOptions*)(state->hook))->append = true;
             break;
         
+        // --overwrite: Overwrite existing output files // GG Added option to overwrite output file or payload if already present
+		case 'f': // GG Added option to overwrite output file or payload if already present
+			((UserOptions*)(state->hook))->overwrite = true; // GG Added option to overwrite output file or payload if already present
+			break; // GG Added option to overwrite output file or payload if already present
+
         // --password: Password provided by the user
         case 'p':
             if (((UserOptions*)(state->hook))->no_password)

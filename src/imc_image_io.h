@@ -46,7 +46,7 @@ enum ImageType {IMC_JPEG, IMC_PNG, IMC_WEBP};
 // Pointers to the steganographic functions
 struct CarrierImage;
 typedef void (*carrier_open_func)(struct CarrierImage *);
-typedef int (*carrier_save_func)(struct CarrierImage *, const char *save_path);
+typedef int (*carrier_save_func)(struct CarrierImage *, const char *save_path, bool overwrite); // GG Added option to overwrite output file or payload if already present
 typedef void (*carrier_close_func)(struct CarrierImage *);
 
 // Image that will carry the hidden data
@@ -147,7 +147,7 @@ static bool __read_payload(CarrierImage *carrier_img, size_t num_bytes, uint8_t 
 // So in order to extract all the hidden files, it should be called
 // until it stops returning the IMC_SUCCESS status code.
 // Note: The filename is stored with the hidden data
-int imc_steg_extract(CarrierImage *carrier_img);
+int imc_steg_extract(CarrierImage *carrier_img, bool overwrite); // GG Added option to overwrite output file or payload if already present
 
 // Move the read position of the carrier bytes to right after the end of the last hidden file
 // Note: this function is intended to be used when in "append mode" while hiding a file.
@@ -183,19 +183,19 @@ static void __copy_file_times(FILE *source_file, const char *dest_path);
 static void __jpeg_write_callback(j_common_ptr jpeg_obj);
 
 // Write the carrier bytes back to the JPEG image, and save it as a new file
-int imc_jpeg_carrier_save(CarrierImage *carrier_img, const char *save_path);
+int imc_jpeg_carrier_save(CarrierImage *carrier_img, const char *save_path, bool overwrite); // GG Added option to overwrite output file or payload if already present
 
 // Progress monitor when writing a PNG image
 static void __png_write_callback(png_structp png_obj, png_uint_32 row, int pass);
 
 // Write the carrier bytes back to the PNG image, and save it as a new file
-int imc_png_carrier_save(CarrierImage *carrier_img, const char *save_path);
+int imc_png_carrier_save(CarrierImage *carrier_img, const char *save_path, bool overwrite); // GG Added option to overwrite output file or payload if already present
 
 // Progress monitor when writing a PNG image
 static int __webp_write_callback(int percent, const WebPPicture* webp_obj);
 
 // Write the carrier bytes back to the WebP image, and save it as a new file
-int imc_webp_carrier_save(CarrierImage *carrier_img, const char *save_path);
+int imc_webp_carrier_save(CarrierImage *carrier_img, const char *save_path, bool overwrite); // GG Added option to overwrite output file or payload if already present
 
 // Free the memory of the array of heap pointers in a CarrierImage struct
 static void __carrier_heap_free(CarrierImage *carrier_img);
@@ -210,7 +210,7 @@ void imc_png_carrier_close(CarrierImage *carrier_img);
 void imc_webp_carrier_close(CarrierImage *carrier_img);
 
 // Save the image with hidden data
-int imc_steg_save(CarrierImage *carrier_img, const char *save_path);
+int imc_steg_save(CarrierImage *carrier_img, const char *save_path, bool overwrite); // GG Added option to overwrite output file or payload if already present
 
 // Free the memory of the data structures used for steganography
 void imc_steg_finish(CarrierImage *carrier_img);

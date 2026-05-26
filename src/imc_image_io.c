@@ -428,7 +428,8 @@ static bool __read_payload(CarrierImage *carrier_img, size_t num_bytes, uint8_t 
 // So in order to extract all the hidden files, it should be called
 // until it stops returning the IMC_SUCCESS status code.
 // Note: The filename is stored with the hidden data
-int imc_steg_extract(CarrierImage *carrier_img)
+int imc_steg_extract(CarrierImage *carrier_img, bool overwrite) // GG Added option to overwrite output file or payload if already present
+// GG int imc_steg_extract(CarrierImage *carrier_img)
 {
     bool read_status;
     
@@ -648,9 +649,11 @@ int imc_steg_extract(CarrierImage *carrier_img)
         is to restore the file as close to the original as possible.
     */
     
-    // Make the filename unique (if it already isn't)
-    bool is_unique = __resolve_filename_collision(file_name);
-    if (!is_unique) return IMC_ERR_FILE_EXISTS;
+    // Make the filename unique (if it already isn't) // GG Added option to overwrite output file or payload if already present
+	if (!overwrite) { // GG Added option to overwrite output file or payload if already present
+	    bool is_unique = __resolve_filename_collision(file_name);
+    	if (!is_unique) return IMC_ERR_FILE_EXISTS;
+	} // GG Added option to overwrite output file or payload if already present
 
     // Write the hidden file to disk
     FILE *out_file = fopen(file_name, "wb");
@@ -1443,7 +1446,8 @@ static void __jpeg_write_callback(j_common_ptr jpeg_obj)
 }
 
 // Write the carrier bytes back to the JPEG image, and save it as a new file
-int imc_jpeg_carrier_save(CarrierImage *carrier_img, const char *save_path)
+int imc_jpeg_carrier_save(CarrierImage *carrier_img, const char *save_path, bool overwrite) // GG Added option to overwrite output file or payload if already present
+// int imc_jpeg_carrier_save(CarrierImage *carrier_img, const char *save_path) // GG Added option to overwrite output file or payload if already present
 {
     // Append the '.jpg' extension to the path, if it does not already end in '.jpg' or '.jpeg'
     const size_t p_len = strlen(save_path);
@@ -1463,9 +1467,11 @@ int imc_jpeg_carrier_save(CarrierImage *carrier_img, const char *save_path)
     // Append a number to the file's stem if the filename already exists
     // Example: 'Image.jpg' might become 'Image (1).jpg'
     // Note: The number goes up to 99, in order to avoid creating too many files accidentally
-    bool is_unique = __resolve_filename_collision(jpeg_path);
-    if (!is_unique) return IMC_ERR_FILE_EXISTS;
-
+	if (!overwrite) { // GG Added option to overwrite output file or payload if already present
+		bool is_unique = __resolve_filename_collision(jpeg_path);
+	    if (!is_unique) return IMC_ERR_FILE_EXISTS;
+	} // GG Added option to overwrite output file or payload if already present
+	
     // Store a copy of the resulting path
     free(carrier_img->out_path);
     carrier_img->out_path = strdup(jpeg_path);
@@ -1610,7 +1616,9 @@ static void __png_write_callback(png_structp png_obj, png_uint_32 row, int pass)
 }
 
 // Write the carrier bytes back to the PNG image, and save it as a new file
-int imc_png_carrier_save(CarrierImage *carrier_img, const char *save_path)
+// GG Added option to overwrite output file or payload if already present
+int imc_png_carrier_save(CarrierImage *carrier_img, const char *save_path, bool overwrite)
+// int imc_png_carrier_save(CarrierImage *carrier_img, const char *save_path) // GG Added option to overwrite output file or payload if already present
 {
     // Append the '.png' extension to the path, if it does not already has the extension
     const size_t p_len = strlen(save_path);
@@ -1626,9 +1634,11 @@ int imc_png_carrier_save(CarrierImage *carrier_img, const char *save_path)
     // Append a number to the file's stem if the filename already exists
     // Example: 'Image.png' might become 'Image (1).png'
     // Note: The number goes up to 99, in order to avoid creating too many files accidentally
-    bool is_unique = __resolve_filename_collision(png_path);
-    if (!is_unique) return IMC_ERR_FILE_EXISTS;
-
+	if (!overwrite) { // GG Added option to overwrite output file or payload if already present
+		bool is_unique = __resolve_filename_collision(png_path);
+	    if (!is_unique) return IMC_ERR_FILE_EXISTS;
+	} // GG Added option to overwrite output file or payload if already present
+	
     // Store a copy of the resulting path
     free(carrier_img->out_path);
     carrier_img->out_path = strdup(png_path);
@@ -1891,7 +1901,9 @@ static int __webp_write_callback(int percent, const WebPPicture* webp_obj)
 }
 
 // Write the carrier bytes back to the WebP image, and save it as a new file
-int imc_webp_carrier_save(CarrierImage *carrier_img, const char *save_path)
+// GG Added option to overwrite output file or payload if already present
+int imc_webp_carrier_save(CarrierImage *carrier_img, const char *save_path, bool overwrite) // GG Added option to overwrite output file or payload if already present
+// GG int imc_webp_carrier_save(CarrierImage *carrier_img, const char *save_path) // GG Added option to overwrite output file or payload if already present
 {
     // Append the '.webp' extension to the path, if it does not already has the extension
     const size_t p_len = strlen(save_path);
@@ -1907,8 +1919,10 @@ int imc_webp_carrier_save(CarrierImage *carrier_img, const char *save_path)
     // Append a number to the file's stem if the filename already exists
     // Example: 'Image.webp' might become 'Image (1).webp'
     // Note: The number goes up to 99, in order to avoid creating too many files accidentally
-    bool is_unique = __resolve_filename_collision(webp_path);
-    if (!is_unique) return IMC_ERR_FILE_EXISTS;
+	if (!overwrite) { // GG Added option to overwrite output file or payload if already present
+	    bool is_unique = __resolve_filename_collision(webp_path);
+	    if (!is_unique) return IMC_ERR_FILE_EXISTS;
+	} // GG Added option to overwrite output file or payload if already present
 
     // Store a copy of the resulting path
     free(carrier_img->out_path);
@@ -2090,9 +2104,11 @@ void imc_webp_carrier_close(CarrierImage *carrier_img)
 }
 
 // Save the image with hidden data
-int imc_steg_save(CarrierImage *carrier_img, const char *save_path)
+// GG Added option to overwrite output file or payload if already present
+int imc_steg_save(CarrierImage *carrier_img, const char *save_path, bool overwrite)
+// GG int imc_steg_save(CarrierImage *carrier_img, const char *save_path) // GG Added option to overwrite output file or payload if already present
 {
-    return carrier_img->save(carrier_img, save_path);
+    return carrier_img->save(carrier_img, save_path, overwrite); // GG Added option to overwrite output file or payload if already present
 }
 
 // Free the memory of the data structures used for steganography
